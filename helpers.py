@@ -100,3 +100,52 @@ def rgb_to_hsl(r, g, b):
         else:
             s = (max - min) / (2 - max - min)
     return (h, s, l)
+
+def get_rgb_color_for_number(number, total_colors_count=None, opacity=1):
+    if total_colors_count is None:
+        angle = number % 360
+    else:
+        angle = 360 * (number / total_colors_count)
+    r, g, b = hsl_to_rgb(hue=angle, sat=1, light=0.5)
+    return (r, g, b, opacity)
+
+def get_normalized_rgb_color_for_number(*args, **kwargs):
+    return normalize_color(get_rgb_color_for_number(*args, **kwargs))
+
+def get_random_rgb_color(degree_start=0, degree_end=360, opacity=1):
+    rand = random.randint(degree_start, degree_end)
+    rgba = (*hsl_to_rgb(rand, 1, 0.5), opacity)
+    return normalize_color(rgba)
+
+def randomize_color_brightness(color):
+    r, g, b, a = color
+    level = random.random()
+    return (r * level, g * level, b * level, a)
+
+def rgb_rotate_color_angle(rgb_color, degrees):
+    r, g, b, a = rgb_color
+    h, s, l = rgb_to_hsl(r, g, b)
+    h = (h + degrees) % 360
+    return (*hsl_to_rgb(h, s, l), a)
+
+def draw_text(canvas, text, position='top', color=(255, 255, 255)):
+    canvas.set_fill_color(*color)
+    w, h = canvas.get_size()
+    
+    if position == 'top':
+        x, y = (5, h - 30)
+    elif position == 'bottom':
+        x, y = 5, 5
+
+    canvas.draw_text(text, x, y, font_name='Helvetica', font_size=16)
+
+def get_fps(time_start, time_finish):
+    time_elapsed = time_finish - time_start
+    return round(1 / time_elapsed)
+
+__all__ = [
+    normalize_number, normalize_color, ease, calc_coordinates_on_circle,
+    hsl_to_rgb, rgb_to_hsl, rgb_rotate_color_angle, draw_text,
+    get_remaining_frame_time, get_rgb_color_for_number, get_fps
+]
+
