@@ -101,3 +101,71 @@ class Particle:
         if self.x > CANVAS_WIDTH or self.x < 0 or self.y > CANVAS_HEIGHT or self.y < 0:
             return True
         return False
+
+def generate_new_particle(canvas, i=0):
+    particle = Particle(canvas, CANVAS_WIDTH / 2, CANVAS_HEIGHT / (100/GENERATOR_HEIGHT_PERCENT))
+    dx = random.randint(-INTIAL_VELOCITY_RANGE, INTIAL_VELOCITY_RANGE)
+    dy = random.randint(-INTIAL_VELOCITY_RANGE, INTIAL_VELOCITY_RANGE)
+    particle.set_intial_velocity(dx, dy)
+    if WATER_COLORS:
+        particle.set_color(helpers.get_random_rgb_color(degree_start=190, degree_end=210))
+    elif ROTATE_COLOR:
+        particle.set_color(helpers.get_normalized_rgb_color_for_number(i / 4))
+    elif RANDOM_COLORS:
+        particle.set_color(helpers.get_random_rgb_color())
+    else:
+        particle.set_color((255,255,255,1))
+    
+    return particle
+        
+
+def render(canvas):
+    particles = []
+    particles_created_count = 0
+    
+    for i in range(PARTICLE_COUNT):
+        particles.append(generate_new_particle(canvas, i))
+        particles_created_count += 1
+    
+    for tick in range(SIMULATION_TIME):
+        canvas.begin_updates()
+        time_start = time.process_time()
+        
+        canvas.set_fill_color(0, 0, 0)
+        canvas.fill_rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+
+        # check if some particle is outside - delete it and create new
+        for particle in particles[:]:
+            if particle.is_outside_canvas():
+                particles.remove(particle)
+                particles.append(generate_new_particle(canvas, tick))
+                particles_created_count += 1
+        
+        for particle in particles:
+            particle.integrate()
+            particle.move(0, -GRAVITY)
+            if BOUNCE:
+                particle.bounce(canvas)
+            particle.fade()
+            particle.draw()
+
+        helpers.draw_text(canvas, 'Created new particles: ' + str(particles_created_count))
+        time_end = time.process_time()
+        time_elapsed = time_end - time_start
+        
+        remaining_frame_time = helpers.get_remaining_frame_time(time_elapsed, FPS)
+        
+        current_fps = helpers.get_fps(time_start, time_end + remaining_frame_time)
+        helpers.draw_text(canvas, f'{current_fps} FPS', 'bottom')
+
+
+        time.sleep(remaining_frame_time)
+        canvas.end_updates()
+
+def main():
+    canvas.set_size(CANVAS_WIDTH, CANVAS_HEIGHT)
+    canvas.set_aa_enabled(False)
+    render(canvas)
+
+if __name__ == '__main__':
+    main()
